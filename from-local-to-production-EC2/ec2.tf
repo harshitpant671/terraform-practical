@@ -57,6 +57,18 @@ resource "aws_security_group" "my_security_group" {
 
 # AWS EC2 Instance
 resource "aws_instance" "my-instance" {
+  for_each = tomap({
+    my_instance_micro = "t2.micro"
+    my_instance_medium = "t2.medium"
+  })
+
+  depends_on = [
+    aws_key_pair.my_key,
+    aws_security_group.my_security_group,
+  ]
+  
+  # Meta argument (Dynamic Blocks)
+  # count = 2
   key_name = aws_key_pair.my_key.key_name
 
   # Correct way to attach Security Group to VPC EC2
@@ -64,18 +76,33 @@ resource "aws_instance" "my-instance" {
     aws_security_group.my_security_group.id
   ]
 
-  instance_type = "t3.micro"
+  # instance_type = "t3.micro"
+  # instance_type = var.ec2_instance_type  # Without using meta argument
+
+  # using meta argument
+  instance_type = each.value
 
   # Ubuntu 22.04
-  ami = "AMI_ID"
+  # ami = "AMI_ID"
+  ami = var.ec2_ami_id
+
+  # user data basically use to run script during the instance creation.
+  user_data = file("install_nginx.sh")
 
   # Root volume storage
+  # root_block_device {
+  #   volume_size = 15
+  #   volume_type = "gp3"
+  # }
+
   root_block_device {
-    volume_size = 15
+    # using meta argument
+    volume_size = var.env == "production" ? 20 : var.ec2_default_root_storage_size # condotional Expression
     volume_type = "gp3"
   }
 
   tags = {
-    Name = "INSTANCE_NAME"
+    # Name = "INSTANCE_NAME" # without meta argument
+    Name = each.key
   }
 }
