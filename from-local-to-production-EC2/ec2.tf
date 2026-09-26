@@ -106,3 +106,11 @@ resource "aws_instance" "my-instance" {
     Name = each.key
   }
 }
+
+# If I want to automate manual created instance in terraform, use terraform import.
+# terraform import aws_instance.my-instance <instance-id>
+
+# resource "aws_instance" "my_new_instance" {
+#   ami = "unknown"
+#   instance_type = "unknown"
+# }
